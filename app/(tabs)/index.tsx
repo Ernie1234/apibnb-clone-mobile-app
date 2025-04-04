@@ -3,7 +3,6 @@ import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
-import { Link } from "expo-router";
 
 const HomeScreen = () => {
   return (
@@ -16,7 +15,6 @@ const HomeScreen = () => {
       <View>
         <Text style={styles.text}>HomeScreen</Text>
         <Text>Hello world</Text>
-        <Link href={`/listings/[listingId]`}>Single Listing Details </Link>
       </View>
     </SafeAreaView>
   );
