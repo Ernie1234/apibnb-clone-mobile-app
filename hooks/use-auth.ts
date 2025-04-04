@@ -11,7 +11,6 @@ export const useAuth = () => {
     const checkAuthStatus = async () => {
       try {
         const userData = await AuthService.checkSession();
-        console.log("In use-auth user hook: ", userData);
         setUser(userData);
       } catch (error) {
         Toast.show({

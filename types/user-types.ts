@@ -37,12 +37,12 @@ export interface IUser {
   Listings: IListing[];
   Reservations: string[]; // Consider using IReservation[] if you have that type
   favouriteIds: string[];
+  token: string;
 }
 
 // Additional types for mobile auth flows
 export interface AuthResponse {
   user: Omit<IUser, "password">;
-  token: string;
   status: boolean;
   message: string;
 }

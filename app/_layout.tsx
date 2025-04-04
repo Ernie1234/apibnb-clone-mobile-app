@@ -3,28 +3,34 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import "react-native-reanimated";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DevToolsBubble } from "react-native-react-query-devtools";
 import * as Clipboard from "expo-clipboard";
 import Toast from "react-native-toast-message";
-
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { toastConfig } from "@/libs/utils/toastConfig";
 import { useAuth } from "@/hooks/use-auth";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Prevent the splash screen from auto-hiding before asset loading is complete
 SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient();
+
+const LoadingScreen = () => (
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+    <ActivityIndicator size="large" />
+  </View>
+);
 
 export default function RootLayout() {
   const router = useRouter();
-  const queryClient = new QueryClient();
   const colorScheme = useColorScheme();
-
-  const [loaded] = useFonts({
+  const { isLoading, isLoggedIn } = useAuth();
+  const [fontsLoaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     nun: require("../assets/fonts/Nunito-Regular.ttf"),
     "nun-md": require("../assets/fonts/Nunito-Medium.ttf"),
@@ -33,33 +39,35 @@ export default function RootLayout() {
     "nun-eb": require("../assets/fonts/Nunito-ExtraBold.ttf"),
   });
 
-  const onCopy = async (text: string) => {
+  const onCopy = useCallback(async (text: string) => {
     try {
       await Clipboard.setStringAsync(text);
       return true;
     } catch {
       return false;
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (loaded) {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-  const { isLoading, isLoggedIn } = useAuth();
+  }, [fontsLoaded]);
 
   useEffect(() => {
-    if (isLoading && isLoggedIn) {
-      router.push("/(tabs)");
+    if (!fontsLoaded || isLoading) return;
+
+    // Only navigate when we have a definitive auth state
+    if (isLoggedIn) {
+      router.replace("/(tabs)");
     } else {
-      router.push("/(modals)/login");
+      router.replace("/(modals)/login");
     }
-  }, [isLoading]);
+  }, [fontsLoaded, isLoading, isLoggedIn]);
+
+  if (!fontsLoaded || isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

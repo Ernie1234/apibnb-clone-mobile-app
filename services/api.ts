@@ -111,7 +111,8 @@ axiosInstance.interceptors.response.use(
 // Auth service functions
 export const AuthService = {
   register: async (userData: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     password: string;
     phoneNumber?: string;
@@ -120,7 +121,7 @@ export const AuthService = {
       "/auth/register",
       userData
     );
-    await SecureStore.setItemAsync("authToken", response.data.token);
+    await SecureStore.setItemAsync("authToken", response.data.user.token);
     return response.data;
   },
 
@@ -132,7 +133,10 @@ export const AuthService = {
       "/auth/login",
       credentials
     );
-    await SecureStore.setItemAsync("authToken", response.data.token);
+    if (typeof response.data.user.token !== "string") {
+      throw new Error("Invalid token received from server");
+    }
+    await SecureStore.setItemAsync("authToken", response.data.user.token);
     return response.data;
   },
 
