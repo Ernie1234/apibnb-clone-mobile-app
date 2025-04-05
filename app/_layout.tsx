@@ -96,7 +96,7 @@ export default function RootLayout() {
           />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style="inverted" />
       </ThemeProvider>
       <DevToolsBubble onCopy={onCopy} />
     </QueryClientProvider>
