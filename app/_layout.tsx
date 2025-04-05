@@ -92,7 +92,7 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="listings/[listingId]"
-            options={{ headerTitle: "" }}
+            options={{ headerTitle: "", headerTransparent: true }}
           />
           <Stack.Screen name="+not-found" />
         </Stack>

@@ -41,7 +41,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   };
 
   const navigateToListing = () => {
-    console.log("Listing ID: ", listing.id);
+    router.push(`/listings/${listing.id}`);
   };
 
   const imageUrl = getSupportedImageUrl(listing.imageSrc[currentImageIndex]);

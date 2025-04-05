@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 8,
-    fontFamily: "nun-bd",
+    fontFamily: "space-mono",
     color: "#0f172a",
   },
   subtitle: {

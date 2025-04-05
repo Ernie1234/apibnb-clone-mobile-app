@@ -115,7 +115,7 @@ export default ListingHeader;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.light.background,
     paddingTop: 5,
     paddingBottom: 16,
     height: 160,
@@ -127,6 +127,8 @@ const styles = StyleSheet.create({
       width: 1,
       height: 10,
     },
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.light.tertiary,
   },
   actionRow: {
     flexDirection: "row",
@@ -159,6 +161,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: "#A2A0A2",
+    backgroundColor: "#fff",
     borderRadius: 24,
   },
   scrollView: {

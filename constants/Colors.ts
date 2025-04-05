@@ -8,7 +8,7 @@ const tintColorLight = "#ff385c"; // Airbnb red
 export const Colors = {
   light: {
     text: "#11181C",
-    background: "#fff",
+    background: "#f2f2f2",
     tint: tintColorLight,
     icon: "#687076",
     tabIconDefault: "#687076",
@@ -16,7 +16,7 @@ export const Colors = {
     primary: "#ff385c", // Airbnb red
     secondary: "#008489", // Airbnb teal
     dark: "#3c3c3c", // Airbnb dark gray
-    tertiary: "#F2F2F2", // Airbnb light gray
+    tertiary: "#A2A0A2", // Airbnb light gray
     muted: "#687076", // Airbnb muted gray
     lightGray: "#F2F2F2", // Airbnb light gray
     gray: "#687076", // Airbnb gray
