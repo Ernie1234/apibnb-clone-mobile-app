@@ -14,6 +14,7 @@ import { TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { toastConfig } from "@/libs/utils/toastConfig";
 import { useAuth } from "@/hooks/use-auth";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete
 SplashScreen.preventAutoHideAsync();
@@ -72,31 +73,33 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={DefaultTheme}>
-        <Toast config={toastConfig} />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="(modals)/login"
-            options={{
-              title: "Login or Signup",
-              headerTitleStyle: {
-                fontFamily: "nun-sb",
-              },
-              presentation: "modal",
-              headerLeft: () => (
-                <TouchableOpacity onPress={() => router.back()}>
-                  <Ionicons name="close-outline" size={24} color="black" />
-                </TouchableOpacity>
-              ),
-            }}
-          />
-          <Stack.Screen
-            name="listings/[listingId]"
-            options={{ headerTitle: "", headerTransparent: true }}
-          />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="inverted" />
+        <GestureHandlerRootView>
+          <Toast config={toastConfig} />
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(modals)/login"
+              options={{
+                title: "Login or Signup",
+                headerTitleStyle: {
+                  fontFamily: "nun-sb",
+                },
+                presentation: "modal",
+                headerLeft: () => (
+                  <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="close-outline" size={24} color="black" />
+                  </TouchableOpacity>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="listings/[listingId]"
+              options={{ headerTitle: "", headerTransparent: true }}
+            />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="inverted" />
+        </GestureHandlerRootView>
       </ThemeProvider>
       <DevToolsBubble onCopy={onCopy} />
     </QueryClientProvider>

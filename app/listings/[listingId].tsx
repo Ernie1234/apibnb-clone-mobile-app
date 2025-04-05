@@ -10,12 +10,14 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  runOnJS,
   SlideInDown,
   interpolate,
   useAnimatedRef,
   useAnimatedStyle,
   useScrollViewOffset,
 } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Colors } from "@/constants/Colors";
@@ -76,6 +78,16 @@ const SingleListingDetails = () => {
       setCurrentImageIndex(currentImageIndex - 1);
     }
   };
+
+  const swipeGesture = Gesture.Pan().onEnd((e) => {
+    if (e.translationX < -50) {
+      // Swipe left - go to next image
+      runOnJS(handleNextImage)();
+    } else if (e.translationX > 50) {
+      // Swipe right - go to previous image
+      runOnJS(handlePrevImage)();
+    }
+  });
 
   const shareListing = async () => {
     try {
@@ -151,10 +163,12 @@ const SingleListingDetails = () => {
         scrollEventThrottle={16}
       >
         <View style={styles.imageContainer}>
-          <Animated.Image
-            source={{ uri: listing.imageSrc[currentImageIndex] }}
-            style={[styles.image, imageAnimatedStyle]}
-          />
+          <GestureDetector gesture={swipeGesture}>
+            <Animated.Image
+              source={{ uri: listing.imageSrc[currentImageIndex] }}
+              style={[styles.image, imageAnimatedStyle]}
+            />
+          </GestureDetector>
 
           {/* Navigation Arrows */}
           {currentImageIndex > 0 && (
