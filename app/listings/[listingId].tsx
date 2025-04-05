@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useState } from "react";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import {
+  ActivityIndicator,
   Dimensions,
   Image,
   Share,
@@ -22,45 +23,53 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { Colors } from "@/constants/Colors";
 import { defaultStyles } from "@/constants/Styles";
+import { useListing } from "@/hooks/use-listing";
+import { getSupportedImageUrl } from "@/libs/utils/fn";
 
 const IMG_HEIGHT = 300;
 const { width } = Dimensions.get("window");
 
-const listing = {
-  id: 6,
-  name: "Cozy Apartment in the heart of Paris",
-  room_type: "Entire apartment",
-  smart_location: "Paris, France",
-  guests_included: 2,
-  bedrooms: 1,
-  beds: 1,
-  bathrooms: 1,
-  review_scores_rating: 95,
-  number_of_reviews: 123,
-  host_picture_url:
-    "https://a0.muscache.com/im/users/123456789/profile_pic/1617447957/original.jpg?im_w=32",
-  host_name: "John Doe",
-  price: 150,
-  imageSrc: [
-    "https://a0.muscache.com/im/ml/photo_enhancement/pictures/014df369-194e-47b1-9d5e-197a22ea9f40.jpg?im_w=1200",
-    "https://a0.muscache.com/im/ml/photo_enhancement/pictures/de6ad764-8ab1-4318-a808-d667b5c9a423.jpg?im_w=720",
-    "https://a0.muscache.com/im/ml/photo_enhancement/pictures/5f0c26e8-194e-4a62-ad52-051c4843e95f.jpg?im_w=720",
-    "https://a0.muscache.com/im/ml/photo_enhancement/pictures/8a7a7845-351b-4da4-b4fe-9bda597a6648.jpg?im_w=720",
-    "https://a0.muscache.com/im/ml/photo_enhancement/pictures/1ab2058b-de9b-492a-8a99-0b42b7db5b3c.jpg?im_w=720",
-  ],
-  host_since: "2015",
-  description:
-    "This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city.",
-  amenities: ["Wifi", "Kitchen", "Private entrance", "Breakfast"],
-  neighborhood_overview:
-    "The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city.",
-  transit: "Metro station: 5-minute walk",
-  access: "24-hour doors",
-  house_rules: "No smoking",
-  listing_url: "https://www.airbnb.com/rooms/6",
-};
+// const listing = {
+//   id: 6,
+//   name: "Cozy Apartment in the heart of Paris",
+//   category: "Entire apartment",
+//   location: "Paris, France",
+//   guestCount: 2,
+//   bedroomCount: 1,
+//   bedCount: 1,
+//   bathroomCount: 1,
+//   review_scores_rating: 95,
+//   number_of_reviews: 123,
+//   host_picture_url:
+//     "https://a0.muscache.com/im/users/123456789/profile_pic/1617447957/original.jpg?im_w=32",
+//   host_name: "John Doe",
+//   price: 150,
+//   imageSrc: [
+//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/014df369-194e-47b1-9d5e-197a22ea9f40.jpg?im_w=1200",
+//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/de6ad764-8ab1-4318-a808-d667b5c9a423.jpg?im_w=720",
+//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/5f0c26e8-194e-4a62-ad52-051c4843e95f.jpg?im_w=720",
+//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/8a7a7845-351b-4da4-b4fe-9bda597a6648.jpg?im_w=720",
+//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/1ab2058b-de9b-492a-8a99-0b42b7db5b3c.jpg?im_w=720",
+//   ],
+//   host_since: "2015",
+//   description:
+//     "This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city.",
+//   amenities: ["Wifi", "Kitchen", "Private entrance", "Breakfast"],
+//   neighborhood_overview:
+//     "The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city.",
+//   transit: "Metro station: 5-minute walk",
+//   access: "24-hour doors",
+//   house_rules: "No smoking",
+//   listing_url: "https://www.airbnb.com/rooms/6",
+// };
 const SingleListingDetails = () => {
   const { listingId } = useLocalSearchParams<{ listingId: string }>();
+  const {
+    data: listingData,
+    isLoading,
+    error,
+  } = useListing(listingId as string);
+  const listing = listingData?.data;
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigation = useNavigation();
@@ -91,9 +100,11 @@ const SingleListingDetails = () => {
 
   const shareListing = async () => {
     try {
+      if (!listing) return;
+
       await Share.share({
-        title: listing.name,
-        url: listing.listing_url,
+        title: listing.title,
+        url: `${process.env.EXPO_PUBLIC_WEB_APP_BASE_URL}/listings/${listing.id}`,
       });
     } catch (err) {
       console.log(err);
@@ -101,6 +112,8 @@ const SingleListingDetails = () => {
   };
 
   useLayoutEffect(() => {
+    if (!listingData) return;
+
     navigation.setOptions({
       headerTitle: "",
       headerTransparent: true,
@@ -126,7 +139,7 @@ const SingleListingDetails = () => {
         </TouchableOpacity>
       ),
     });
-  }, []);
+  }, [listing]);
 
   const imageAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -155,6 +168,35 @@ const SingleListingDetails = () => {
     };
   }, []);
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="warning-outline" size={48} color={Colors.light.red} />
+        <Text style={styles.errorText}>Failed to load listing details</Text>
+        <Text style={styles.errorSubText}>{error.message}</Text>
+      </View>
+    );
+  }
+
+  if (!listing) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="search-outline" size={48} color={Colors.light.gray} />
+        <Text style={styles.errorText}>Listing not found</Text>
+      </View>
+    );
+  }
+
+  const imageUrl = getSupportedImageUrl(listing.imageSrc[currentImageIndex]);
+
   return (
     <View style={styles.container}>
       <Animated.ScrollView
@@ -165,7 +207,7 @@ const SingleListingDetails = () => {
         <View style={styles.imageContainer}>
           <GestureDetector gesture={swipeGesture}>
             <Animated.Image
-              source={{ uri: listing.imageSrc[currentImageIndex] }}
+              source={{ uri: imageUrl }}
               style={[styles.image, imageAnimatedStyle]}
             />
           </GestureDetector>
@@ -198,13 +240,13 @@ const SingleListingDetails = () => {
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.name}>{listing.name}</Text>
+          <Text style={styles.name}>{listing.title}</Text>
           <Text style={styles.location}>
-            {listing.room_type} in {listing.smart_location}
+            {listing.category} in {listing.location}
           </Text>
           <Text style={styles.rooms}>
-            {listing.guests_included} guests · {listing.bedrooms} bedrooms ·{" "}
-            {listing.beds} bed · {listing.bathrooms} bathrooms
+            {listing.guestCount} guests · {listing.roomCount} bedrooms ·{" "}
+            {listing?.bedCount} bed · {listing?.bathroomCount} bathrooms
           </Text>
           <View style={{ flexDirection: "row", gap: 4 }}>
             <Ionicons name="star" size={16} />
@@ -382,5 +424,29 @@ const styles = StyleSheet.create({
   imageCounterText: {
     color: "white",
     fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    gap: 12,
+  },
+  errorText: {
+    fontSize: 18,
+    fontFamily: "mon-sb",
+    color: Colors.light.dark,
+    textAlign: "center",
+  },
+  errorSubText: {
+    fontSize: 14,
+    fontFamily: "mon",
+    color: Colors.light.gray,
+    textAlign: "center",
   },
 });
