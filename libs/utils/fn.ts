@@ -36,3 +36,11 @@ export function getInitials(fullName: string): string {
 
   return "";
 }
+
+export const getSupportedImageUrl = (url: string) => {
+  // Convert AVIF to JPEG if needed
+  if (url.endsWith(".avif")) {
+    return url.replace(".avif", ".jpg");
+  }
+  return url;
+};

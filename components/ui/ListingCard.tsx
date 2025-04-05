@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 import HeartBtn from "./HeartBtn";
 import { Colors } from "@/constants/Colors";
 import { IListing } from "@/types/listing-types";
-import { formatPrice, timeAgo } from "@/libs/utils/fn";
+import { formatPrice, getSupportedImageUrl, timeAgo } from "@/libs/utils/fn";
 
 interface ListingCardProps {
   listing: IListing;
@@ -26,6 +26,7 @@ const CARD_WIDTH = width - CARD_PADDING * 2; // Calculate width minus padding
 const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   const handleNext = () => {
     setCurrentImageIndex((prevIndex) =>
@@ -43,17 +44,28 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
     console.log("Listing ID: ", listing.id);
   };
 
+  const imageUrl = getSupportedImageUrl(listing.imageSrc[currentImageIndex]);
+
   return (
     <View style={styles.outerContainer}>
-      {" "}
-      {/* Added outer container for padding */}
       <TouchableOpacity style={styles.container} onPress={navigateToListing}>
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: listing.imageSrc[currentImageIndex] }}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          {!imageError ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.image}
+              resizeMode="cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <View style={[styles.image, styles.fallbackImage]}>
+              <Ionicons
+                name="image-outline"
+                size={50}
+                color={Colors.light.muted}
+              />
+            </View>
+          )}
           <View style={styles.heartContainer}>
             <HeartBtn listingId={listing.id} />
           </View>
@@ -177,6 +189,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "normal",
     color: Colors.light.muted,
+  },
+  fallbackImage: {
+    backgroundColor: Colors.light.lightGray,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
