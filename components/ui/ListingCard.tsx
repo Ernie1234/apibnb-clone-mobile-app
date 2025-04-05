@@ -7,8 +7,8 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 import HeartBtn from "./HeartBtn";
 import { Colors } from "@/constants/Colors";
@@ -20,10 +20,11 @@ interface ListingCardProps {
 }
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = (width - 32) / 2 - 8;
+const CARD_PADDING = 6; // Added padding constant
+const CARD_WIDTH = width - CARD_PADDING * 2; // Calculate width minus padding
 
 const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const handleNext = () => {
@@ -43,62 +44,69 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={navigateToListing}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: listing.imageSrc[currentImageIndex] }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <View style={styles.heartContainer}>
-          <HeartBtn listingId={listing.id} />
+    <View style={styles.outerContainer}>
+      {" "}
+      {/* Added outer container for padding */}
+      <TouchableOpacity style={styles.container} onPress={navigateToListing}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: listing.imageSrc[currentImageIndex] }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <View style={styles.heartContainer}>
+            <HeartBtn listingId={listing.id} />
+          </View>
+
+          {listing.imageSrc.length > 1 && (
+            <>
+              <TouchableOpacity
+                style={[styles.navButton, styles.prevButton]}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handlePrev();
+                }}
+                disabled={currentImageIndex === 0}
+              >
+                <Ionicons name="chevron-back" size={20} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.navButton, styles.nextButton]}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleNext();
+                }}
+                disabled={currentImageIndex === listing.imageSrc.length - 1}
+              >
+                <Ionicons name="chevron-forward" size={20} color="white" />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
-        {listing.imageSrc.length > 1 && (
-          <>
-            <TouchableOpacity
-              style={[styles.navButton, styles.prevButton]}
-              onPress={(e) => {
-                e.stopPropagation();
-                handlePrev();
-              }}
-              disabled={currentImageIndex === 0}
-            >
-              <Ionicons name="chevron-back" size={20} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.navButton, styles.nextButton]}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleNext();
-              }}
-              disabled={currentImageIndex === listing.imageSrc.length - 1}
-            >
-              <Ionicons name="chevron-forward" size={20} color="white" />
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
-
-      <View style={styles.details}>
-        <Text style={styles.title} numberOfLines={1}>
-          {listing.title}
-        </Text>
-        <Text style={styles.time}>Added {timeAgo(listing.createdAt)}</Text>
-        <Text style={styles.category}>{listing.category}</Text>
-        <Text style={styles.price}>
-          ${formatPrice(listing.price)}{" "}
-          <Text style={styles.nightText}>night</Text>
-        </Text>
-      </View>
-    </TouchableOpacity>
+        <View style={styles.details}>
+          <Text style={styles.title} numberOfLines={1}>
+            {listing.title}
+          </Text>
+          <Text style={styles.time}>Added {timeAgo(listing.createdAt)}</Text>
+          <Text style={styles.category}>{listing.category}</Text>
+          <View style={styles.priceWrapper}>
+            <Text style={styles.price}>${formatPrice(listing.price)} </Text>
+            <Text style={styles.nightText}>night</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    paddingHorizontal: CARD_PADDING, // Added horizontal padding
+    marginBottom: 16, // Increased bottom margin for better spacing
+  },
   container: {
-    width: CARD_WIDTH,
-    marginBottom: 8,
+    width: "100%", // Takes full width of parent (minus padding)
   },
   imageContainer: {
     width: "100%",
@@ -137,28 +145,36 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   title: {
-    fontSize: 14,
+    fontFamily: "nun-sb",
+    fontSize: 20, // Slightly larger for better readability
     fontWeight: "600",
     color: Colors.light.text,
   },
   time: {
-    fontSize: 12,
+    fontFamily: "nun",
+    fontSize: 16,
     color: Colors.light.muted,
-    marginTop: 2,
   },
   category: {
-    fontSize: 12,
+    fontFamily: "nun",
+    fontSize: 16,
     color: Colors.light.muted,
-    marginTop: 2,
+  },
+  priceWrapper: {
+    marginTop: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   price: {
-    fontSize: 14,
+    fontFamily: "nun-sb",
+    fontSize: 18, // Slightly larger
     fontWeight: "600",
     color: Colors.light.text,
-    marginTop: 4,
   },
   nightText: {
-    fontSize: 12,
+    fontFamily: "nun",
+    fontSize: 16,
     fontWeight: "normal",
     color: Colors.light.muted,
   },

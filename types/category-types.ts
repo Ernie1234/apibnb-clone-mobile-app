@@ -47,12 +47,6 @@ export const categories: ICategory[] = [
     icon: "wine-glass-alt",
     iconSet: "FontAwesome5",
   },
-  {
-    id: 16,
-    name: "Boat",
-    icon: "sait-boat",
-    iconSet: "Fontisto",
-  },
   { id: 12, name: "Skiing", icon: "skiing", iconSet: "FontAwesome5" },
   { id: 13, name: "Beach", icon: "beach", iconSet: "MaterialCommunityIcons" },
   { id: 14, name: "City", icon: "location-city", iconSet: "MaterialIcons" },
@@ -61,6 +55,12 @@ export const categories: ICategory[] = [
     name: "Amazing Pool",
     icon: "pool",
     iconSet: "MaterialCommunityIcons",
+  },
+  {
+    id: 16,
+    name: "Boat",
+    icon: "sait-boat",
+    iconSet: "Fontisto",
   },
   {
     id: 17,

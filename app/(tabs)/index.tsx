@@ -8,8 +8,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { Colors } from "@/constants/Colors";
 import ListingSkeleton from "@/components/ui/SkeletonLoader";
 import EmptyListing from "@/components/ui/EmptyListing";
@@ -17,6 +15,8 @@ import { getAllListing } from "@/services/apiServices/listing-query";
 import ListingCard from "@/components/ui/ListingCard";
 import { useSearchStore } from "@/hooks/use-searchStore";
 import ListingHeader from "@/components/ui/ListingHeader";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { IListing } from "@/types/listing-types";
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -33,7 +33,6 @@ const HomeScreen = () => {
     queryKey: ["getAllListing", category, location],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await getAllListing(category, location, pageParam);
-      // Transform the API response to match expected format
       return {
         listings: response.data.listings,
         total: response.data.total,
@@ -41,13 +40,11 @@ const HomeScreen = () => {
       };
     },
     getNextPageParam: (lastPage, allPages) => {
-      // Use the hasMore flag from API response
       return lastPage.hasMore ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
   });
 
-  // Safely extract listings
   const allListings = useMemo(() => {
     return data?.pages.flatMap((page) => page?.listings || []) || [];
   }, [data]);
@@ -57,32 +54,6 @@ const HomeScreen = () => {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  // Loading state
-  if (isLoading) {
-    return <ListingSkeleton />;
-  }
-
-  // Error state
-  if (error)
-    return (
-      <View style={styles.errorContainer}>
-        <Text>Error: {error.message}</Text>
-      </View>
-    );
-
-  // Empty state
-  if (!isLoading && allListings?.length === 0) {
-    return (
-      <EmptyListing
-        showReset
-        onReset={() => {
-          setSelectedCategory("");
-          setCategory("");
-        }}
-      />
-    );
-  }
 
   const handleCategoryChange = useCallback(
     (category: string) => {
@@ -99,16 +70,42 @@ const HomeScreen = () => {
     [setCategory]
   );
 
+  if (isLoading) {
+    return <ListingSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading listings</Text>
+      </View>
+    );
+  }
+
+  if (!isLoading && allListings.length === 0) {
+    return (
+      <EmptyListing
+        showReset
+        onReset={() => {
+          setSelectedCategory("");
+          setCategory("");
+        }}
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ListingHeader onCategoryChanged={handleCategoryChange} />
 
       <FlatList
         data={allListings}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ListingCard listing={item} />}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
+        keyExtractor={(item: IListing) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.singleColumnItem}>
+            <ListingCard listing={item} />
+          </View>
+        )}
         contentContainerStyle={styles.listContent}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
@@ -139,14 +136,13 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: Colors.light.background,
   },
   listContent: {
-    padding: 8,
+    padding: 16, // Increased padding for better spacing
   },
-  columnWrapper: {
-    justifyContent: "space-between",
-    marginBottom: 16,
+  singleColumnItem: {
+    marginBottom: 16, // Add space between items
   },
   footer: {
     padding: 20,
@@ -156,17 +152,26 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: Colors.light.primary,
     borderRadius: 8,
+    minWidth: 120,
+    alignItems: "center",
   },
   loadMoreText: {
-    color: Colors.light.primary,
+    color: Colors.light.lightGray,
     fontWeight: "bold",
   },
   endText: {
     color: Colors.light.text,
+    fontSize: 14,
   },
   errorContainer: {
-    padding: 16,
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
+    padding: 16,
+  },
+  errorText: {
+    color: Colors.light.red,
+    fontSize: 16,
   },
 });
 
