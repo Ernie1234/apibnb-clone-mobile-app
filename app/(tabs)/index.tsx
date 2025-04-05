@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { Colors } from "@/constants/Colors";
 import ListingSkeleton from "@/components/ui/SkeletonLoader";
 import EmptyListing from "@/components/ui/EmptyListing";
@@ -15,10 +17,10 @@ import { getAllListing } from "@/services/apiServices/listing-query";
 import ListingCard from "@/components/ui/ListingCard";
 import { useSearchStore } from "@/hooks/use-searchStore";
 import ListingHeader from "@/components/ui/ListingHeader";
-import { Stack } from "expo-router";
 
 const HomeScreen = () => {
-  const { category, location } = useSearchStore();
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const { category, location, setCategory } = useSearchStore();
 
   const {
     data,
@@ -71,23 +73,37 @@ const HomeScreen = () => {
 
   // Empty state
   if (!isLoading && allListings?.length === 0) {
-    return <EmptyListing showReset />;
-  }
-  const [cat, setCat] = useState("");
-
-  const onDataChange = (category: string) => {
-    // Handle category change
-    console.log("Selected category:", category);
-  };
-
-  return (
-    <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          header: () => <ListingHeader onCategoryChanged={onDataChange} />,
+    return (
+      <EmptyListing
+        showReset
+        onReset={() => {
+          setSelectedCategory("");
+          setCategory("");
         }}
       />
-      {/* <FlatList
+    );
+  }
+
+  const handleCategoryChange = useCallback(
+    (category: string) => {
+      setSelectedCategory((prev) => {
+        if (prev === category) {
+          setCategory("");
+          return "";
+        } else {
+          setCategory(category);
+          return category;
+        }
+      });
+    },
+    [setCategory]
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ListingHeader onCategoryChanged={handleCategoryChange} />
+
+      <FlatList
         data={allListings}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ListingCard listing={item} />}
@@ -115,8 +131,8 @@ const HomeScreen = () => {
             )}
           </View>
         }
-      /> */}
-    </View>
+      />
+    </SafeAreaView>
   );
 };
 

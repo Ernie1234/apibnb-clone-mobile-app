@@ -39,8 +39,6 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   };
 
   const navigateToListing = () => {
-    // navigation.navigate("ListingDetails", { listingId: listing.id });
-    // navigation.navigate("ListingDetails", { listing });
     console.log("Listing ID: ", listing.id);
   };
 

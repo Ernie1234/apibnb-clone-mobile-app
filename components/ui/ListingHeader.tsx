@@ -1,5 +1,4 @@
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,14 +8,11 @@ import {
 import React, { useRef, useState } from "react";
 import { Link } from "expo-router";
 import { Colors } from "@/constants/Colors";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
-import { categories } from "@/constants/Data";
+import { IconRenderer } from "./IconRenderer";
+import { categories } from "@/types/category-types";
 
 interface Props {
   onCategoryChanged: (category: string) => void;
@@ -53,10 +49,8 @@ const ListingHeader = ({ onCategoryChanged }: Props) => {
             <Ionicons name="search" size={24} />
             <View>
               <Text style={{ fontFamily: "nun-sb" }}>Where to?</Text>
-              <Text
-                style={{ fontFamily: "nun", color: Colors.light.lightGray }}
-              >
-                Anywhere . Any week
+              <Text style={{ fontFamily: "nun", color: Colors.light.gray }}>
+                Anywhere . Any week . Add guests
               </Text>
             </View>
           </TouchableOpacity>
@@ -86,9 +80,16 @@ const ListingHeader = ({ onCategoryChanged }: Props) => {
             }
             onPress={() => selectCategory(index)}
           >
-            <MaterialIcons
+            {/* <MaterialIcons
               name={category.icon as any}
               size={24}
+              color={
+                activeIndex === index ? Colors.light.text : Colors.light.gray
+              }
+            /> */}
+            <IconRenderer
+              iconSet={category.iconSet}
+              iconName={category.icon}
               color={
                 activeIndex === index ? Colors.light.text : Colors.light.gray
               }
@@ -115,9 +116,9 @@ export default ListingHeader;
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
-    paddingTop: 60, // Adjust this based on your status bar height
+    paddingTop: 5,
     paddingBottom: 16,
-    height: 130,
+    height: 160,
     elevation: 2,
     shadowColor: "#000",
     shadowOpacity: 0.1,
