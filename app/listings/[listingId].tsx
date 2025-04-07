@@ -1,26 +1,19 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import {
   ActivityIndicator,
   Dimensions,
-  ImageStyle,
-  ViewStyle,
   Image,
   Share,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  ScrollView,
+  Animated,
+  PanResponder,
+  LayoutAnimation,
 } from "react-native";
-import Animated, {
-  runOnJS,
-  SlideInDown,
-  interpolate,
-  useAnimatedRef,
-  useAnimatedStyle,
-  useScrollViewOffset,
-} from "react-native-reanimated";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Colors } from "@/constants/Colors";
@@ -42,8 +35,16 @@ const SingleListingDetails = () => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigation = useNavigation();
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Configure layout animation for image changes
+  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+  const scrollHandler = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: false } // Changed to false as transform animations don't support native driver
+  );
 
   const handleNextImage = () => {
     if (listing?.imageSrc && currentImageIndex < listing.imageSrc.length - 1) {
@@ -57,13 +58,21 @@ const SingleListingDetails = () => {
     }
   };
 
-  const swipeGesture = Gesture.Pan().onEnd((e) => {
-    if (e.translationX < -50) {
-      runOnJS(handleNextImage)();
-    } else if (e.translationX > 50) {
-      runOnJS(handlePrevImage)();
-    }
-  });
+  // Create pan responder for swipe gestures
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -50) {
+          handleNextImage();
+        } else if (gestureState.dx > 50) {
+          handlePrevImage();
+        }
+      },
+    })
+  ).current;
 
   const shareListing = async () => {
     try {
@@ -76,6 +85,34 @@ const SingleListingDetails = () => {
     } catch (err) {
       console.log(err);
     }
+  };
+
+  // Animated styles
+  const imageAnimatedStyle = {
+    transform: [
+      {
+        translateY: scrollY.interpolate({
+          inputRange: [-IMG_HEIGHT, 0, IMG_HEIGHT],
+          outputRange: [-IMG_HEIGHT / 2, 0, IMG_HEIGHT * 0.75],
+          extrapolate: "clamp",
+        }),
+      },
+      {
+        scale: scrollY.interpolate({
+          inputRange: [-IMG_HEIGHT, 0, IMG_HEIGHT],
+          outputRange: [2, 1, 1],
+          extrapolate: "clamp",
+        }),
+      },
+    ],
+  };
+
+  const headerAnimatedStyle = {
+    opacity: scrollY.interpolate({
+      inputRange: [0, IMG_HEIGHT / 1.5],
+      outputRange: [0, 1],
+      extrapolate: "clamp",
+    }),
   };
 
   useLayoutEffect(() => {
@@ -108,33 +145,6 @@ const SingleListingDetails = () => {
     });
   }, [listing]);
 
-  const imageAnimatedStyle = useAnimatedStyle<ImageStyle>(() => {
-    return {
-      transform: [
-        {
-          translateY: interpolate(
-            scrollOffset.value,
-            [-IMG_HEIGHT, 0, IMG_HEIGHT],
-            [-IMG_HEIGHT / 2, 0, IMG_HEIGHT * 0.75]
-          ),
-        },
-        {
-          scale: interpolate(
-            scrollOffset.value,
-            [-IMG_HEIGHT, 0, IMG_HEIGHT],
-            [2, 1, 1]
-          ),
-        },
-      ],
-    };
-  });
-
-  const headerAnimatedStyle = useAnimatedStyle<ViewStyle>(() => {
-    return {
-      opacity: interpolate(scrollOffset.value, [0, IMG_HEIGHT / 1.5], [0, 1]),
-    };
-  });
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -166,18 +176,16 @@ const SingleListingDetails = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.ScrollView
-        contentContainerStyle={{ paddingBottom: 100 }}
+      <ScrollView
         ref={scrollRef}
         scrollEventThrottle={16}
+        onScroll={scrollHandler}
       >
-        <View style={styles.imageContainer}>
-          <GestureDetector gesture={swipeGesture}>
-            <Animated.Image
-              source={{ uri: imageUrl }}
-              style={[styles.image, imageAnimatedStyle]}
-            />
-          </GestureDetector>
+        <View style={styles.imageContainer} {...panResponder.panHandlers}>
+          <Animated.Image
+            source={{ uri: imageUrl }}
+            style={[styles.image, imageAnimatedStyle]}
+          />
 
           {currentImageIndex > 0 && (
             <TouchableOpacity
@@ -241,120 +249,83 @@ const SingleListingDetails = () => {
 
           <Text style={styles.description}>
             {listing.description}
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-            Accusantium quam nesciunt in, aspernatur perferendis cumque et
-            maxime eius qui rem unde laborum voluptatibus fugiat. Alias minima
-            molestiae libero esse iure. Delectus consequatur non consequuntur!
-            In voluptates, fugit accusamus eum cumque dolore? Rerum dicta
-            debitis sunt omnis aspernatur aliquid, illum beatae necessitatibus
-            corporis molestiae! Voluptatum dicta nisi optio, mollitia dolores
-            quisquam. Ad magni modi similique eaque a. Dolorem blanditiis
-            voluptate quis illo a eum obcaecati molestiae, quisquam voluptatum
-            enim repellendus quos nihil odio ipsum molestias magnam commodi.
-            Similique esse omnis quasi. Numquam aut aliquam enim error maiores
-            similique eaque quas vel perferendis architecto asperiores impedit
-            itaque magni voluptate totam, rerum nulla soluta veniam odit in sed
-            unde iure! Distinctio, suscipit blanditiis. Velit eveniet sunt non
-            reprehenderit quae voluptatem, distinctio adipisci tempora
-            temporibus sed explicabo hic vitae voluptatum earum dolores
-            voluptates? Aliquid ullam cumque velit odit aperiam perferendis eius
-            iusto excepturi quaerat. Obcaecati ea illum quos ex doloribus illo,
-            rem excepturi. Itaque saepe officiis soluta ducimus consectetur
-            reprehenderit repellat, blanditiis, iure sapiente alias non enim
-            vitae? Amet, laboriosam! Exercitationem, voluptate amet! Cumque.
-            Autem, earum, animi nemo consectetur voluptatem repellendus at
-            dolorem blanditiis a obcaecati, maxime atque aliquam laudantium
-            maiores. Sint et voluptatum laboriosam temporibus incidunt
-            dignissimos sequi expedita, eaque rem iure voluptas. Autem nostrum
-            ex voluptatem iure quaerat. Distinctio repudiandae totam,
-            perferendis culpa voluptatibus laboriosam nobis natus incidunt ea
-            quasi molestias velit eum. Quo eum aliquid temporibus numquam
-            dignissimos praesentium molestias suscipit. Et porro quas
-            consectetur nihil quisquam ut culpa, molestiae enim, sit provident
-            id aliquam nulla ea eum in accusamus atque doloremque veniam.
-            Inventore, assumenda. Magni ad a iste nihil harum. Quas, dolor
-            labore? Tempore placeat commodi temporibus ratione dignissimos.
-            Beatae nam fugit ut rem ab, similique illum, odio sit laudantium
-            omnis, assumenda perspiciatis inventore quis architecto quasi unde
-            asperiores alias? Sequi consequuntur at laboriosam earum accusantium
-            nam, consectetur numquam rerum quod facere magnam officiis
-            perferendis obcaecati nesciunt. Aperiam odit ex corporis, vero
-            maiores fugit architecto in, sint cumque error enim? Eveniet
-            voluptatum ipsum consectetur enim, at, officia, fuga pariatur iusto
-            ducimus magnam labore atque nostrum ad in recusandae quas esse
-            sapiente vero nobis porro nihil. Laudantium eos id nobis vitae.
-            Assumenda iste soluta enim! Illum possimus voluptatibus blanditiis
-            illo, repellat tenetur sit ut itaque id sint non? Mollitia
-            reprehenderit praesentium natus quo quae, in rem ad vitae
-            architecto, ipsam eum! Possimus explicabo doloremque nihil amet
-            repellendus excepturi quod provident, ducimus, vitae officia
-            laboriosam perferendis debitis magnam. Sapiente quia, ipsam deleniti
-            explicabo quidem quam, voluptatibus blanditiis, molestiae pariatur
-            voluptates repellat doloremque? Consequatur accusantium debitis
-            fugit neque libero voluptas id? Ipsam labore dolor porro illum magni
-            numquam ullam perferendis nostrum consequuntur praesentium, unde
-            fuga. Unde omnis numquam delectus, molestiae deleniti inventore
-            velit. Sequi est, modi eum perspiciatis dolorem aliquam, facilis
-            porro dolor quos fugiat minima cum voluptas quam ipsum officiis.
-            Ratione aspernatur accusantium a praesentium dicta nobis eaque sed,
-            ea rerum similique? Voluptatibus at dignissimos blanditiis quisquam
-            quia illum atque molestiae, nulla pariatur culpa iure consectetur id
-            eveniet dolorum voluptas est distinctio odit amet corporis sint
-            provident. Minus dolore mollitia earum veniam! Distinctio cumque
-            alias, incidunt quas delectus, voluptatem atque velit inventore
-            nesciunt cum cupiditate, ab voluptas sunt in laudantium quaerat
-            eligendi commodi. Laboriosam iure ipsa incidunt autem hic dolore ab
-            nisi. Quod corporis soluta autem ipsum tempora saepe eveniet error
-            debitis laudantium quas odio aspernatur, sint asperiores omnis vel
-            cum repellendus amet nisi, perspiciatis accusantium itaque illum
-            cupiditate quaerat animi? Dignissimos! Nam necessitatibus labore
-            cupiditate porro rerum mollitia exercitationem qui officia
-            praesentium nisi adipisci dolore magnam, odio maiores minus cumque
-            et quas ad suscipit. Numquam exercitationem doloribus accusantium
-            assumenda natus iste! Minima nesciunt dignissimos maiores, sint
-            beatae delectus autem quos dolor, doloremque maxime ipsum aut velit
-            voluptatibus deleniti, odit temporibus vero incidunt! Quibusdam
-            consequatur ex enim incidunt eum ullam minima tempore. Quo adipisci
-            obcaecati quam facere neque sequi ipsa. Facilis asperiores
-            reprehenderit, similique accusamus hic ad. Atque magni quas ratione
-            praesentium, blanditiis voluptates nulla molestiae facilis
-            architecto expedita commodi ullam qui! Autem odit laboriosam
-            deleniti non voluptatum nam illo ipsam incidunt architecto mollitia
-            quisquam, molestiae fugit eius aperiam aut itaque delectus
-            temporibus nesciunt ratione sit magni, recusandae quaerat? Modi,
-            facere ab! Ea quo quod eum? Odit nemo quam a animi nobis quaerat
-            ipsum modi natus totam necessitatibus unde tempore dolores impedit,
-            nesciunt adipisci ex atque at repellat dolor dolorem repudiandae
-            labore. Quaerat sint porro libero sequi praesentium sunt. Placeat
-            sed neque quibusdam, quod quia consectetur architecto voluptatum
-            dignissimos. Totam praesentium amet, tempora debitis atque dicta
-            corrupti accusantium rerum dolorem, sed dolore! Nemo saepe debitis
-            quis veniam, dignissimos minus quasi vel minima ipsam suscipit
-            possimus accusamus neque modi harum maxime pariatur repudiandae
-            quidem at fugiat, incidunt consequatur, cumque voluptatem magni
-            dicta. Neque! Cum nobis blanditiis beatae quibusdam dolore atque
-            facilis vero nesciunt aut enim quas, illo reprehenderit, harum nisi
-            placeat voluptate consequatur illum ullam debitis provident. A iste
-            velit sequi architecto optio. Nemo, deserunt. Expedita voluptatem
-            minima voluptatibus consectetur et perspiciatis possimus, nisi
-            recusandae similique a adipisci fuga modi in. Reiciendis eos iusto
-            corporis culpa. Fuga laboriosam veniam voluptatem enim ab explicabo?
-            Omnis sit mollitia sed doloremque obcaecati officia adipisci
-            repellendus numquam ex molestiae quis, iusto autem totam fuga
-            voluptates saepe animi, iure, facilis unde aperiam illum expedita
-            recusandae? Molestias, nobis voluptates? Laudantium exercitationem
-            ipsam soluta! Unde laborum earum tenetur, eum explicabo quod autem
-            quisquam, deserunt maiores accusamus vitae! Accusantium deserunt
-            voluptatibus ex asperiores magni illo, eum commodi temporibus rerum
-            vel. Harum!
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+            Repudiandae eius deleniti necessitatibus veritatis tenetur culpa
+            sunt laboriosam quis maxime excepturi, dignissimos eveniet illum
+            repellendus tempore, quasi aliquid quod alias iste? Pariatur quos
+            doloribus architecto dignissimos nam reiciendis dolore voluptates
+            maxime recusandae ipsum aspernatur expedita suscipit repellat cumque
+            unde commodi nihil id ducimus facere, sit exercitationem dolorum
+            fuga? Atque, reprehenderit voluptates. Molestias omnis nostrum dolor
+            minus dolore, in magnam cum dignissimos dolorem aut quis quia
+            excepturi blanditiis quaerat facere obcaecati similique asperiores
+            fugit qui ad. Blanditiis doloremque consequuntur a quos odit! Illum,
+            consequuntur excepturi. Aliquid incidunt quae sequi voluptas facilis
+            illo exercitationem minus veniam? Ratione expedita inventore, fuga
+            sequi fugiat voluptatibus eligendi in non exercitationem architecto
+            corrupti reprehenderit quidem repellendus provident. Consequuntur
+            molestias excepturi cupiditate sapiente amet fugit tenetur, tempora
+            iste placeat illo dolore est debitis! Labore debitis adipisci sed
+            nesciunt nisi obcaecati possimus minus, provident, voluptatum
+            blanditiis ea voluptas! Ipsa. Quae earum doloremque quas explicabo
+            eaque, delectus architecto, libero sit sed quasi id natus. Sed
+            deserunt natus vel, voluptas et perspiciatis in dolorum quae
+            exercitationem hic minima perferendis, illum nulla. Enim, molestias
+            nesciunt voluptas temporibus, minima consequatur aut laborum a sequi
+            tempora magnam dolores sapiente reprehenderit. Explicabo accusamus
+            illum velit accusantium alias neque ipsum, impedit architecto
+            aliquid vel nesciunt distinctio! Beatae vitae similique, velit
+            fugiat nisi soluta expedita maiores quo? Quisquam, maiores quas!
+            Autem quis, pariatur blanditiis culpa numquam aliquid aliquam, rem
+            distinctio doloremque temporibus quos odit architecto ipsam quas? At
+            vitae quo commodi suscipit, consequatur nobis? Commodi similique et
+            atque eveniet quaerat quasi praesentium rerum ab veritatis! Facere,
+            aliquam. Sunt beatae suscipit odit maiores eos ut perferendis
+            consequatur rerum! Culpa modi voluptate non aut, consequatur placeat
+            aspernatur! Earum, minima rem sit, sint ratione fuga quo facilis
+            debitis, ducimus exercitationem praesentium? Explicabo consequatur
+            et suscipit accusantium laborum quaerat fugiat maxime. Asperiores
+            error delectus cupiditate, dolorem quas alias reiciendis labore
+            veniam consequatur ipsum? Dolorum, fugit commodi. Quo veritatis
+            tempora quaerat inventore sit obcaecati tempore, numquam, odit natus
+            sint delectus nihil reiciendis! Animi adipisci et omnis voluptates
+            labore optio impedit, natus in dolorum fuga obcaecati reprehenderit
+            accusamus explicabo perspiciatis nisi inventore! Laborum cum numquam
+            adipisci officia ipsam nesciunt error repellat qui? Ipsa. Id, nobis
+            atque dolorum sunt quos officia asperiores maiores exercitationem
+            aliquid! Vel veritatis praesentium voluptate reprehenderit ab eaque
+            dicta eligendi minus quasi rem. Aliquam laborum accusamus quasi
+            exercitationem maiores. Sapiente. Id esse qui similique unde
+            mollitia consectetur at quia minus, laudantium nisi, omnis beatae
+            animi atque, quae voluptas iure explicabo temporibus quaerat
+            exercitationem delectus tempore. Architecto voluptatibus tempora
+            natus numquam. Ad quam minima quasi. Id reprehenderit placeat fugit
+            possimus suscipit, doloribus ipsam minima autem expedita pariatur.
+            Veritatis adipisci blanditiis consectetur, delectus autem natus
+            reprehenderit deserunt quas quo reiciendis sint quod. Similique
+            inventore deleniti ex id ipsa iste totam est perspiciatis autem,
+            officia fugit quis! Eos, quis velit perspiciatis quas neque
+            officiis, nostrum minima, facere impedit omnis placeat facilis
+            corrupti deserunt! Dolorem qui quae, quasi eos et natus! Molestias
+            beatae dolor fuga quia magnam, illum, reprehenderit odio dolore
+            consequuntur cum alias laboriosam, ea dignissimos blanditiis animi
+            incidunt minus culpa. Ullam, dolor! Corporis vel libero vero
+            obcaecati eveniet distinctio mollitia iusto reiciendis molestiae
+            inventore atque quam quod sunt ut similique quo unde, modi ipsa
+            cupiditate quae, veritatis deleniti laboriosam soluta? Labore, ea.
+            Labore dolorum cumque quisquam, neque deserunt obcaecati nemo est
+            tenetur, libero laboriosam necessitatibus, optio nisi harum! In enim
+            aliquam earum, perspiciatis laboriosam repellendus eum
+            exercitationem, nam cum autem distinctio asperiores. Quidem numquam
+            voluptate nemo quas deserunt praesentium. Error nisi aliquam maiores
+            impedit praesentium dolorum ipsum omnis quos? Placeat modi nesciunt,
+            eius temporibus possimus ipsum quasi similique excepturi veritatis
+            qui hic.
           </Text>
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
 
-      <Animated.View
-        style={defaultStyles.footer}
-        entering={SlideInDown.delay(200)}
-      >
+      <View style={defaultStyles.footer}>
         <View
           style={{
             flexDirection: "row",
@@ -373,7 +344,7 @@ const SingleListingDetails = () => {
             <Text style={defaultStyles.btnText}>Reserve</Text>
           </TouchableOpacity>
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 };
