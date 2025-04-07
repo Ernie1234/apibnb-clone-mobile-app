@@ -20,6 +20,7 @@ import { Colors } from "@/constants/Colors";
 import { defaultStyles } from "@/constants/Styles";
 import { useListing } from "@/hooks/use-listing";
 import { getSupportedImageUrl } from "@/libs/utils/fn";
+import ListingComments from "@/components/ui/ListingComments";
 
 const IMG_HEIGHT = 300;
 const { width } = Dimensions.get("window");
@@ -250,6 +251,8 @@ const SingleListingDetails = () => {
           <View style={styles.divider} />
 
           <Text style={styles.description}>{listing.description}</Text>
+          <View style={styles.divider} />
+          <ListingComments listingId={listing.id} />
         </View>
       </ScrollView>
 
