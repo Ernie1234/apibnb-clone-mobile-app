@@ -181,11 +181,13 @@ const SingleListingDetails = () => {
         scrollEventThrottle={16}
         onScroll={scrollHandler}
       >
-        <View style={styles.imageContainer} {...panResponder.panHandlers}>
-          <Animated.Image
-            source={{ uri: imageUrl }}
-            style={[styles.image, imageAnimatedStyle]}
-          />
+        <View style={styles.imageContainer}>
+          <View {...panResponder.panHandlers}>
+            <Animated.Image
+              source={{ uri: imageUrl }}
+              style={[styles.image, imageAnimatedStyle]}
+            />
+          </View>
 
           {currentImageIndex > 0 && (
             <TouchableOpacity
