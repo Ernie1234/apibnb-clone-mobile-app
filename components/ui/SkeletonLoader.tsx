@@ -1,11 +1,12 @@
 import React from "react";
 
 import { View, StyleSheet, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 // import { Skeleton } from "moti/skeleton";
 
 const ListingSkeleton = () => {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* {[...Array(6)].map((_, index) => (
         <View key={index} style={styles.card}>
           <Skeleton width="100%" height={150} radius={8} />
@@ -19,7 +20,7 @@ const ListingSkeleton = () => {
       <Text style={{ fontSize: 24, fontWeight: "bold", color: "#000" }}>
         Loading Listings...
       </Text>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -3,6 +3,8 @@ import { useLocalSearchParams, useNavigation } from "expo-router";
 import {
   ActivityIndicator,
   Dimensions,
+  ImageStyle,
+  ViewStyle,
   Image,
   Share,
   StyleSheet,
@@ -29,39 +31,6 @@ import { getSupportedImageUrl } from "@/libs/utils/fn";
 const IMG_HEIGHT = 300;
 const { width } = Dimensions.get("window");
 
-// const listing = {
-//   id: 6,
-//   name: "Cozy Apartment in the heart of Paris",
-//   category: "Entire apartment",
-//   location: "Paris, France",
-//   guestCount: 2,
-//   bedroomCount: 1,
-//   bedCount: 1,
-//   bathroomCount: 1,
-//   review_scores_rating: 95,
-//   number_of_reviews: 123,
-//   host_picture_url:
-//     "https://a0.muscache.com/im/users/123456789/profile_pic/1617447957/original.jpg?im_w=32",
-//   host_name: "John Doe",
-//   price: 150,
-//   imageSrc: [
-//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/014df369-194e-47b1-9d5e-197a22ea9f40.jpg?im_w=1200",
-//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/de6ad764-8ab1-4318-a808-d667b5c9a423.jpg?im_w=720",
-//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/5f0c26e8-194e-4a62-ad52-051c4843e95f.jpg?im_w=720",
-//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/8a7a7845-351b-4da4-b4fe-9bda597a6648.jpg?im_w=720",
-//     "https://a0.muscache.com/im/ml/photo_enhancement/pictures/1ab2058b-de9b-492a-8a99-0b42b7db5b3c.jpg?im_w=720",
-//   ],
-//   host_since: "2015",
-//   description:
-//     "This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city. This cozy apartment is located in the heart of Paris, just a few steps away from the Eiffel Tower. It features a fully equipped kitchen, a comfortable living room, and a beautiful view of the city. The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city.",
-//   amenities: ["Wifi", "Kitchen", "Private entrance", "Breakfast"],
-//   neighborhood_overview:
-//     "The apartment is located in a quiet neighborhood, close to many restaurants and shops. The metro station is just a 5-minute walk away, making it easy to explore the city.",
-//   transit: "Metro station: 5-minute walk",
-//   access: "24-hour doors",
-//   house_rules: "No smoking",
-//   listing_url: "https://www.airbnb.com/rooms/6",
-// };
 const SingleListingDetails = () => {
   const { listingId } = useLocalSearchParams<{ listingId: string }>();
   const {
@@ -77,7 +46,7 @@ const SingleListingDetails = () => {
   const scrollOffset = useScrollViewOffset(scrollRef);
 
   const handleNextImage = () => {
-    if (currentImageIndex < listing.imageSrc.length - 1) {
+    if (listing?.imageSrc && currentImageIndex < listing.imageSrc.length - 1) {
       setCurrentImageIndex(currentImageIndex + 1);
     }
   };
@@ -90,10 +59,8 @@ const SingleListingDetails = () => {
 
   const swipeGesture = Gesture.Pan().onEnd((e) => {
     if (e.translationX < -50) {
-      // Swipe left - go to next image
       runOnJS(handleNextImage)();
     } else if (e.translationX > 50) {
-      // Swipe right - go to previous image
       runOnJS(handlePrevImage)();
     }
   });
@@ -112,7 +79,7 @@ const SingleListingDetails = () => {
   };
 
   useLayoutEffect(() => {
-    if (!listingData) return;
+    if (!listing) return;
 
     navigation.setOptions({
       headerTitle: "",
@@ -141,13 +108,13 @@ const SingleListingDetails = () => {
     });
   }, [listing]);
 
-  const imageAnimatedStyle = useAnimatedStyle(() => {
+  const imageAnimatedStyle = useAnimatedStyle<ImageStyle>(() => {
     return {
       transform: [
         {
           translateY: interpolate(
             scrollOffset.value,
-            [-IMG_HEIGHT, 0, IMG_HEIGHT, IMG_HEIGHT],
+            [-IMG_HEIGHT, 0, IMG_HEIGHT],
             [-IMG_HEIGHT / 2, 0, IMG_HEIGHT * 0.75]
           ),
         },
@@ -162,11 +129,11 @@ const SingleListingDetails = () => {
     };
   });
 
-  const headerAnimatedStyle = useAnimatedStyle(() => {
+  const headerAnimatedStyle = useAnimatedStyle<ViewStyle>(() => {
     return {
       opacity: interpolate(scrollOffset.value, [0, IMG_HEIGHT / 1.5], [0, 1]),
     };
-  }, []);
+  });
 
   if (isLoading) {
     return (
@@ -212,7 +179,6 @@ const SingleListingDetails = () => {
             />
           </GestureDetector>
 
-          {/* Navigation Arrows */}
           {currentImageIndex > 0 && (
             <TouchableOpacity
               style={[styles.navButton, styles.prevButton]}
@@ -222,16 +188,16 @@ const SingleListingDetails = () => {
             </TouchableOpacity>
           )}
 
-          {currentImageIndex < listing.imageSrc.length - 1 && (
-            <TouchableOpacity
-              style={[styles.navButton, styles.nextButton]}
-              onPress={handleNextImage}
-            >
-              <Ionicons name="chevron-forward" size={24} color="white" />
-            </TouchableOpacity>
-          )}
+          {listing.imageSrc &&
+            currentImageIndex < listing.imageSrc.length - 1 && (
+              <TouchableOpacity
+                style={[styles.navButton, styles.nextButton]}
+                onPress={handleNextImage}
+              >
+                <Ionicons name="chevron-forward" size={24} color="white" />
+              </TouchableOpacity>
+            )}
 
-          {/* Image Counter */}
           <View style={styles.imageCounter}>
             <Text style={styles.imageCounterText}>
               {currentImageIndex + 1}/{listing.imageSrc.length}
@@ -273,7 +239,115 @@ const SingleListingDetails = () => {
 
           <View style={styles.divider} />
 
-          <Text style={styles.description}>{listing.description}</Text>
+          <Text style={styles.description}>
+            {listing.description}
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+            Accusantium quam nesciunt in, aspernatur perferendis cumque et
+            maxime eius qui rem unde laborum voluptatibus fugiat. Alias minima
+            molestiae libero esse iure. Delectus consequatur non consequuntur!
+            In voluptates, fugit accusamus eum cumque dolore? Rerum dicta
+            debitis sunt omnis aspernatur aliquid, illum beatae necessitatibus
+            corporis molestiae! Voluptatum dicta nisi optio, mollitia dolores
+            quisquam. Ad magni modi similique eaque a. Dolorem blanditiis
+            voluptate quis illo a eum obcaecati molestiae, quisquam voluptatum
+            enim repellendus quos nihil odio ipsum molestias magnam commodi.
+            Similique esse omnis quasi. Numquam aut aliquam enim error maiores
+            similique eaque quas vel perferendis architecto asperiores impedit
+            itaque magni voluptate totam, rerum nulla soluta veniam odit in sed
+            unde iure! Distinctio, suscipit blanditiis. Velit eveniet sunt non
+            reprehenderit quae voluptatem, distinctio adipisci tempora
+            temporibus sed explicabo hic vitae voluptatum earum dolores
+            voluptates? Aliquid ullam cumque velit odit aperiam perferendis eius
+            iusto excepturi quaerat. Obcaecati ea illum quos ex doloribus illo,
+            rem excepturi. Itaque saepe officiis soluta ducimus consectetur
+            reprehenderit repellat, blanditiis, iure sapiente alias non enim
+            vitae? Amet, laboriosam! Exercitationem, voluptate amet! Cumque.
+            Autem, earum, animi nemo consectetur voluptatem repellendus at
+            dolorem blanditiis a obcaecati, maxime atque aliquam laudantium
+            maiores. Sint et voluptatum laboriosam temporibus incidunt
+            dignissimos sequi expedita, eaque rem iure voluptas. Autem nostrum
+            ex voluptatem iure quaerat. Distinctio repudiandae totam,
+            perferendis culpa voluptatibus laboriosam nobis natus incidunt ea
+            quasi molestias velit eum. Quo eum aliquid temporibus numquam
+            dignissimos praesentium molestias suscipit. Et porro quas
+            consectetur nihil quisquam ut culpa, molestiae enim, sit provident
+            id aliquam nulla ea eum in accusamus atque doloremque veniam.
+            Inventore, assumenda. Magni ad a iste nihil harum. Quas, dolor
+            labore? Tempore placeat commodi temporibus ratione dignissimos.
+            Beatae nam fugit ut rem ab, similique illum, odio sit laudantium
+            omnis, assumenda perspiciatis inventore quis architecto quasi unde
+            asperiores alias? Sequi consequuntur at laboriosam earum accusantium
+            nam, consectetur numquam rerum quod facere magnam officiis
+            perferendis obcaecati nesciunt. Aperiam odit ex corporis, vero
+            maiores fugit architecto in, sint cumque error enim? Eveniet
+            voluptatum ipsum consectetur enim, at, officia, fuga pariatur iusto
+            ducimus magnam labore atque nostrum ad in recusandae quas esse
+            sapiente vero nobis porro nihil. Laudantium eos id nobis vitae.
+            Assumenda iste soluta enim! Illum possimus voluptatibus blanditiis
+            illo, repellat tenetur sit ut itaque id sint non? Mollitia
+            reprehenderit praesentium natus quo quae, in rem ad vitae
+            architecto, ipsam eum! Possimus explicabo doloremque nihil amet
+            repellendus excepturi quod provident, ducimus, vitae officia
+            laboriosam perferendis debitis magnam. Sapiente quia, ipsam deleniti
+            explicabo quidem quam, voluptatibus blanditiis, molestiae pariatur
+            voluptates repellat doloremque? Consequatur accusantium debitis
+            fugit neque libero voluptas id? Ipsam labore dolor porro illum magni
+            numquam ullam perferendis nostrum consequuntur praesentium, unde
+            fuga. Unde omnis numquam delectus, molestiae deleniti inventore
+            velit. Sequi est, modi eum perspiciatis dolorem aliquam, facilis
+            porro dolor quos fugiat minima cum voluptas quam ipsum officiis.
+            Ratione aspernatur accusantium a praesentium dicta nobis eaque sed,
+            ea rerum similique? Voluptatibus at dignissimos blanditiis quisquam
+            quia illum atque molestiae, nulla pariatur culpa iure consectetur id
+            eveniet dolorum voluptas est distinctio odit amet corporis sint
+            provident. Minus dolore mollitia earum veniam! Distinctio cumque
+            alias, incidunt quas delectus, voluptatem atque velit inventore
+            nesciunt cum cupiditate, ab voluptas sunt in laudantium quaerat
+            eligendi commodi. Laboriosam iure ipsa incidunt autem hic dolore ab
+            nisi. Quod corporis soluta autem ipsum tempora saepe eveniet error
+            debitis laudantium quas odio aspernatur, sint asperiores omnis vel
+            cum repellendus amet nisi, perspiciatis accusantium itaque illum
+            cupiditate quaerat animi? Dignissimos! Nam necessitatibus labore
+            cupiditate porro rerum mollitia exercitationem qui officia
+            praesentium nisi adipisci dolore magnam, odio maiores minus cumque
+            et quas ad suscipit. Numquam exercitationem doloribus accusantium
+            assumenda natus iste! Minima nesciunt dignissimos maiores, sint
+            beatae delectus autem quos dolor, doloremque maxime ipsum aut velit
+            voluptatibus deleniti, odit temporibus vero incidunt! Quibusdam
+            consequatur ex enim incidunt eum ullam minima tempore. Quo adipisci
+            obcaecati quam facere neque sequi ipsa. Facilis asperiores
+            reprehenderit, similique accusamus hic ad. Atque magni quas ratione
+            praesentium, blanditiis voluptates nulla molestiae facilis
+            architecto expedita commodi ullam qui! Autem odit laboriosam
+            deleniti non voluptatum nam illo ipsam incidunt architecto mollitia
+            quisquam, molestiae fugit eius aperiam aut itaque delectus
+            temporibus nesciunt ratione sit magni, recusandae quaerat? Modi,
+            facere ab! Ea quo quod eum? Odit nemo quam a animi nobis quaerat
+            ipsum modi natus totam necessitatibus unde tempore dolores impedit,
+            nesciunt adipisci ex atque at repellat dolor dolorem repudiandae
+            labore. Quaerat sint porro libero sequi praesentium sunt. Placeat
+            sed neque quibusdam, quod quia consectetur architecto voluptatum
+            dignissimos. Totam praesentium amet, tempora debitis atque dicta
+            corrupti accusantium rerum dolorem, sed dolore! Nemo saepe debitis
+            quis veniam, dignissimos minus quasi vel minima ipsam suscipit
+            possimus accusamus neque modi harum maxime pariatur repudiandae
+            quidem at fugiat, incidunt consequatur, cumque voluptatem magni
+            dicta. Neque! Cum nobis blanditiis beatae quibusdam dolore atque
+            facilis vero nesciunt aut enim quas, illo reprehenderit, harum nisi
+            placeat voluptate consequatur illum ullam debitis provident. A iste
+            velit sequi architecto optio. Nemo, deserunt. Expedita voluptatem
+            minima voluptatibus consectetur et perspiciatis possimus, nisi
+            recusandae similique a adipisci fuga modi in. Reiciendis eos iusto
+            corporis culpa. Fuga laboriosam veniam voluptatem enim ab explicabo?
+            Omnis sit mollitia sed doloremque obcaecati officia adipisci
+            repellendus numquam ex molestiae quis, iusto autem totam fuga
+            voluptates saepe animi, iure, facilis unde aperiam illum expedita
+            recusandae? Molestias, nobis voluptates? Laudantium exercitationem
+            ipsam soluta! Unde laborum earum tenetur, eum explicabo quod autem
+            quisquam, deserunt maiores accusamus vitae! Accusantium deserunt
+            voluptatibus ex asperiores magni illo, eum commodi temporibus rerum
+            vel. Harum!
+          </Text>
         </View>
       </Animated.ScrollView>
 

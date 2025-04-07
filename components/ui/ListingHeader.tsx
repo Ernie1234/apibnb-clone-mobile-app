@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     width: 280,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#c2c2c2",
-    borderRadius: 30,
+    borderRadius: 50,
     elevation: 2,
     shadowColor: "#000",
     shadowOpacity: 0.12,

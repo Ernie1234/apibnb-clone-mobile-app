@@ -1,3 +1,5 @@
+import "react-native-reanimated";
+import "react-native-gesture-handler";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
@@ -71,9 +73,9 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={DefaultTheme}>
-        <GestureHandlerRootView>
+    <ThemeProvider value={DefaultTheme}>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <Toast config={toastConfig} />
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -100,8 +102,8 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="inverted" />
         </GestureHandlerRootView>
-      </ThemeProvider>
-      <DevToolsBubble onCopy={onCopy} />
-    </QueryClientProvider>
+        <DevToolsBubble onCopy={onCopy} />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
